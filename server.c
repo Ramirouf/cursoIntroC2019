@@ -20,7 +20,7 @@ int main(int argc, const char *argv[])
         server.sin_addr.s_addr = INADDR_ANY;
         bzero(&(server.sin_zero), 8);
 
-        if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)))
+        if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         {
             perror("Unable to create socket");
             exit(1);
@@ -36,8 +36,26 @@ int main(int argc, const char *argv[])
             perror("Unable to listen on port\n");
             exit(1);
         }
+
+        int length = sizeof(struct sockaddr_in);
+        printf("Waiting for a connection...\n");
+        if ((client_socket = accept(server_socket, (struct sockaddr *)&client, &length)) == -1)
+        {
+            perror("Unable to accept connection\n");
+            exit(1);
+        }
+
+        char str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &client.sin_addr, str, INET_ADDRSTRLEN);
+
+        printf("Client connected from %s:%d\n", str, client.sin_port);
+        send(client_socket, "Hello client", strlen("Hello client"), 0);
+        printf("Message sent to client\n");
+        shutdown(client_socket, 2);
+        shutdown(server_socket, 2);
     }
     else
     {
+        printf("Please, set a port");
     }
 }
